@@ -15,21 +15,27 @@ class DPLLSolver:
 
     @staticmethod
     def _get_solution(clauses_dict, vars_dict):
-        key = DPLLSolver._get_fixed_key(clauses_dict, vars_dict)
-        copy = False
-        if key is not None:
-            keys = [key]
-        else:
-            keys = DPLLSolver._sort_vars(vars_dict)
-            copy = True
-
-        for key in keys:
-            if copy == True:
-                clauses_dict_new = deepcopy(clauses_dict)
-                vars_dict_new = deepcopy(vars_dict)
+        keys = []
+        while True:
+            key = DPLLSolver._get_fixed_key(clauses_dict, vars_dict)
+            if key is not None:
+                keys.append(key)
+                clauses_dict, vars_dict = DPLLSolver._remove_var(key, clauses_dict, vars_dict)
             else:
-                clauses_dict_new = clauses_dict
-                vars_dict_new = vars_dict
+                break
+
+        status = DPLLSolver._get_status(clauses_dict)
+        if status == True:
+            return True, keys
+        elif status == False:
+            return False, None
+
+        # Recursion
+        keys = DPLLSolver._sort_vars(vars_dict)
+        for key in keys:
+            #deepcopy takes a lot of time!
+            clauses_dict_new = deepcopy(clauses_dict)
+            vars_dict_new = deepcopy(vars_dict)
 
             clauses_dict_new, vars_dict_new = DPLLSolver._remove_var(key, clauses_dict_new, vars_dict_new)
 
@@ -38,9 +44,9 @@ class DPLLSolver:
             if status is None:
                 res_status, res_solution = DPLLSolver._get_solution(clauses_dict_new, vars_dict_new)
                 if res_status == True:
-                    return True, res_solution + [key]
+                    return True, res_solution + [key] + keys
             elif status == True:
-                return True, [key]
+                return True, [key] + keys
 
         return False, None
 
