@@ -32,7 +32,7 @@ class Parser:
                 if line_data[-1] != '0':
                     raise ValueError('Given file is not in correct format.')
 
-                clauses_list.append([int(i) for i in line_data[:-1]])
+                clauses_list.append(set([int(i) for i in line_data[:-1]]))
 
             if num_of_clauses is None or num_of_variables is None:
                 raise ValueError('Given file is not in correct format.')
