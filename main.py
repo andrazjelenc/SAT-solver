@@ -1,6 +1,7 @@
 from file_parser import Parser
 from DPLLSolver import DPLLSolver
 
+
 def construct_dict_of_vars(num_of_variables, clauses_dict):
     result = dict()
 
@@ -16,6 +17,7 @@ def construct_dict_of_vars(num_of_variables, clauses_dict):
         result[-var] = lst_neg
 
     return result
+
 
 def main():
     p = Parser('examples/sudoku_mini.txt')
@@ -38,7 +40,6 @@ def main():
 
     print(status)
     print(result)
-
 
 
 if __name__ == '__main__':
