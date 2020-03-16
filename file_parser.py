@@ -31,22 +31,18 @@ class Parser:
                 line_data = line.split(' ')
                 if line_data[-1] != '0':
                     raise ValueError('Given file is not in correct format.')
+                clause = dict()
+                for val in line_data[:-1]:
+                    val = int(val)
+                    val_abs = abs(val)
+                    if val > 0:
+                        clause[val_abs] = True
+                    else:
+                        clause[val_abs] = False
 
-                clauses_list.append(set([int(i) for i in line_data[:-1]]))
+                clauses_list.append(clause)
 
             if num_of_clauses is None or num_of_variables is None:
                 raise ValueError('Given file is not in correct format.')
 
-            return num_of_variables, num_of_clauses, clauses_list
-
-
-if __name__ == '__main__':
-    try:
-        p = Parser('examples/sudoku_mini.txt')
-        num_of_variables, num_of_clauses, clauses_list = p.parse()
-        print('Number of variables: {}'.format(num_of_variables))
-        print('Number of clauses: {}'.format(num_of_clauses))
-        for clause in clauses_list:
-            print(clause)
-    except:
-        print("Something went wrong.")
+            return clauses_list

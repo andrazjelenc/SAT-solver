@@ -1,102 +1,116 @@
-from copy import deepcopy
 import time
 
 
 class DPLLSolver:
-    def __init__(self, clauses_dict, vars_dict):
-        self.clauses_dict = clauses_dict
-        self.vars_dict = vars_dict
+    def __init__(self, clauses_list):
+        self.clauses_list = clauses_list
 
     def solve(self):
         start_time = time.time()
-        status, solution = DPLLSolver._get_solution(self.clauses_dict, self.vars_dict)
+        status, solution = DPLLSolver._get_solution(self.clauses_list, dict())
         stop_time = time.time()
         return status, solution, stop_time - start_time
 
     @staticmethod
-    def _get_solution(clauses_dict, vars_dict):
-        keys = []
+    def _get_solution(clauses_list, pre_fixed_org):
+        pre_fixed = dict(pre_fixed_org)
         while True:
-            key = DPLLSolver._get_fixed_key(clauses_dict, vars_dict)
-            if key is not None:
-                keys.append(key)
-                clauses_dict, vars_dict = DPLLSolver._remove_var(key, clauses_dict, vars_dict)
-            else:
+            #dict of keys that can be fixed
+            keys = DPLLSolver._get_fixed_keys(clauses_list)
+
+            if keys == False:
+                return False, None
+
+            if len(keys) == 0:
                 break
 
-        status = DPLLSolver._get_status(clauses_dict)
+            pre_fixed.update(keys)
+            # simplify clauses according fixed keys
+            clauses_list = DPLLSolver._remove_vars(keys, clauses_list)
+
+        status = DPLLSolver._get_status(clauses_list)
         if status == True:
-            return True, keys
+            return True, pre_fixed
         elif status == False:
             return False, None
 
         # Recursion
-        keys = DPLLSolver._sort_vars(vars_dict)
-        for key in keys:
-            #deepcopy takes a lot of time!
-            clauses_dict_new = deepcopy(clauses_dict)
-            vars_dict_new = deepcopy(vars_dict)
+        key = next(iter(clauses_list[0])) # get first variable
 
-            clauses_dict_new, vars_dict_new = DPLLSolver._remove_var(key, clauses_dict_new, vars_dict_new)
+        #Suppose key is True
+        clauses_list.append({key: True})
+        status, solution = DPLLSolver._get_solution(clauses_list, pre_fixed)
+        if status == True:
+            return True, solution
 
-            status = DPLLSolver._get_status(clauses_dict_new)
-
-            if status is None:
-                res_status, res_solution = DPLLSolver._get_solution(clauses_dict_new, vars_dict_new)
-                if res_status == True:
-                    return True, res_solution + [key] + keys
-            elif status == True:
-                return True, [key] + keys
-
-        return False, None
-
-    @staticmethod
-    def _get_fixed_key(clauses_dict, vars_dict):
-        # Find all variables that are alone in some clause
-        for i in clauses_dict:
-            if len(clauses_dict[i]) == 1:
-                (el,) = clauses_dict[i]
-                return el
-
-        # Find all variables that there is not -var in any clause
-        for var in vars_dict:
-            if len(vars_dict[var]) > 0 and len(vars_dict[-var]) == 0:
-                return var
-
-        return None
+        #Suppose key is False
+        del clauses_list[-1]
+        clauses_list.append({key: False})
+        return DPLLSolver._get_solution(clauses_list, pre_fixed)
 
 
     @staticmethod
-    def _remove_var(var, clauses_dict, vars_dict):
-        # remove clauses that contains var
-        for clause in list(vars_dict[var]):
-            # Remove this clause from list of clauses for every var
-            for other_var in clauses_dict[clause]:
-                vars_dict[other_var].remove(clause)
+    def _get_fixed_keys(clauses_list):
+        # Get keys that are alone in clause and there fore must be fixed
+        single_keys = dict()
+        for clause in clauses_list:
+            if len(clause) > 1:
+                continue
+            for key in clause:
+                value = clause[key]
+                if key not in single_keys:
+                    single_keys[key] = value
+                elif value != single_keys[key]:
+                    return False
 
-            del clauses_dict[clause]
+        pure_keys = dict()
+        for clause in clauses_list:
+            for key in clause:
+                if key not in single_keys:
+                    value = clause[key]
+                    if key not in pure_keys:
+                        pure_keys[key] = value
+                    elif value != pure_keys[key]:
+                        pure_keys[key] = None
 
-        # from clauses that contains -var remove it
-        for clause in vars_dict[-var]:
-            clauses_dict[clause].remove(-var)
+        for key in list(pure_keys):
+            if pure_keys[key] is None:
+                del pure_keys[key]
 
-        # from var_dict_new remove var and -var
-        del vars_dict[var]
-        del vars_dict[-var]
-
-        return clauses_dict, vars_dict
+        return {**single_keys, **pure_keys}
 
     @staticmethod
-    def _sort_vars(vars_dict):
-        return sorted((var for var in vars_dict if len(vars_dict[var]) > 0), key=lambda k: len(vars_dict[k]), reverse=True)
+    def _remove_vars(vars, clauses_list):
+        new_clauses_list = []
+        for clause in clauses_list:
+            new_clause = dict()
+            for var in clause:
+                if var not in vars:
+                    #prepisi vrednost
+                    new_clause[var] = clause[var]
+                    continue
+
+                vars_value = vars[var]
+                local_value = clause[var]
+
+                if vars_value == local_value:
+                    #brisi clause
+                    new_clause = None
+                    break
+                else:
+                    continue
+            if new_clause is not None:
+                new_clauses_list.append(new_clause)
+
+        return new_clauses_list
 
     @staticmethod
-    def _get_status(clauses_dict):
-        if not bool(clauses_dict):
-            return True # solved
+    def _get_status(clauses_list):
+        if len(clauses_list) == 0:
+            return True # Solved
 
-        for i in clauses_dict:
-            if len(clauses_dict[i]) == 0:
-                return False # cannot be solved
+        for clause in clauses_list:
+            if len(clause) == 0:
+                return False # Cannot be solved
 
-        return None #We are not yet finished
+        return None # We are not yet finished
