@@ -2,6 +2,21 @@ class Parser:
     def __init__(self, filename):
         self.filename = filename
 
+    def parse_solution(self):
+        result = dict()
+        with open(self.filename) as f:
+            line = f.readlines()[0]
+            line = line.strip()
+            line_data = line.split(' ')
+            for var in line_data:
+                var = int(var)
+                var_abs = abs(var)
+                if var > 0:
+                    result[var_abs] = True
+                else:
+                    result[var_abs] = False
+        return result
+
     def parse(self):
         num_of_variables = None
         num_of_clauses = None
