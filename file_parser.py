@@ -33,7 +33,7 @@ class Parser:
                 # header line
                 # p cnf 64 453
                 if line.startswith('p cnf'):
-                    line_data = line.split(' ')
+                    line_data = line.split()
                     if len(line_data) != 4:
                         raise ValueError('Given file is not in correct format.')
 
@@ -43,7 +43,7 @@ class Parser:
 
                 # clause line
                 # 5 -1 4 0
-                line_data = line.split(' ')
+                line_data = line.split()
                 if line_data[-1] != '0':
                     raise ValueError('Given file is not in correct format.')
                 clause = dict()
