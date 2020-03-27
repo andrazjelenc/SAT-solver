@@ -7,6 +7,7 @@ class DPLLSolver:
 
     def solve(self):
         start_time = time.time()
+        self.clauses_list.sort(key=len, reverse=True)
         status, solution = DPLLSolver._get_solution(self.clauses_list, dict())
         stop_time = time.time()
         return status, solution, stop_time - start_time
