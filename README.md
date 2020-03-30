@@ -16,5 +16,6 @@ Example calls:
 `python SAT_solver.py my_cnf.txt solution.txt`
 
 ## Optimization attempt
+At the beginning solver order input clauses by number of literals in descending order.
 Solver's branching is implemented so as to choose the first literal of the first clause, set it to True and recursively run the solving algorithm. If no satisfiable valuation is found it tries again, this time setting the chosen literal to False.
 One optimization we tried was to choose the literal that occurs most often in current formula. The attempt turned out to be unsuccessful as the execution time of our test cases had doubled. We are aware that our test cases are small and the results could be different on larger cases. Still, we decided to abandon this idea due to uncertainty.
